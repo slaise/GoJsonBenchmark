@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"strconv"
 	"testing"
 
 	"github.com/buger/jsonparser"
@@ -75,44 +76,13 @@ func BenchmarkSimdJsonSmall(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		d, _ := simdjson.Parse(smallFixture, nil)
-		iter := d.Iter()
+
 		var data SmallPayload
-		obj, tmp, elem := &simdjson.Object{}, &simdjson.Iter{}, simdjson.Element{}
-		typ := iter.Advance()
-		switch typ {
-		case simdjson.TypeRoot:
-			typ, tmp, _ = iter.Root(&iter)
-
-			if typ == simdjson.TypeObject {
-				obj, _ = tmp.Object(obj)
-
-				e := obj.FindKey("uuid", &elem)
-				if e != nil && elem.Type == simdjson.TypeString {
-					v, _ := elem.Iter.StringBytes()
-					data.Uuid = string(v)
-				}
-
-				e = obj.FindKey("ua", &elem)
-				if e != nil && elem.Type == simdjson.TypeString {
-					v, _ := elem.Iter.StringBytes()
-					data.Ua = string(v)
-				}
-
-				e = obj.FindKey("tz", &elem)
-				if e != nil && elem.Type == simdjson.TypeInt {
-					v, _ := elem.Iter.Int()
-					data.Tz = int(v)
-				}
-
-				e = obj.FindKey("st", &elem)
-				if e != nil && elem.Type == simdjson.TypeInt {
-					v, _ := elem.Iter.Int()
-					data.St = int(v)
-				}
-			}
-		default:
-			break
-		}
+		uuid, _ := findKey(d.Iter(), "uuid")
+		data.Uuid = uuid
+		tzs, _ := findKey(d.Iter(), "tz")
+		tz, _ := strconv.Atoi(tzs)
+		data.Tz = tz
 	}
 }
 
