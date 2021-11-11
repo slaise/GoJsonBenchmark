@@ -7,23 +7,26 @@ import (
 	"github.com/buger/jsonparser"
 	gojson "github.com/goccy/go-json"
 	"github.com/json-iterator/go"
-	"github.com/valyala/fastjson"
 )
 
 // jsonParser
-func BenchmarkJsonParserLarge(b *testing.B) {
+func BenchmarkJsonParserLargePl(b *testing.B) {
 	b.ReportAllocs()
+	b.SetBytes(int64(len(largeFixture)))
+
 	for i := 0; i < b.N; i++ {
 		count := 0
 		jsonparser.ArrayEach(largeFixture, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 			count++
-		}, "topics", "topics")
+		}, "users", "username", "avatar_template")
 	}
 }
 
 // go-json
-func BenchmarkGoJsonLarge(b *testing.B)  {
+func BenchmarkGoJsonLargePl(b *testing.B) {
 	b.ReportAllocs()
+	b.SetBytes(int64(len(largeFixture)))
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		var data LargePayload
@@ -31,29 +34,12 @@ func BenchmarkGoJsonLarge(b *testing.B)  {
 	}
 }
 
-// fastjson
-func BenchmarkFastJsonLarge(b *testing.B) {
-	b.ReportAllocs()
-	b.ResetTimer()
-	count := 0
-	for i := 0; i < b.N; i++ {
-		var p fastjson.Parser
-		v, _ := p.ParseBytes(largeFixture)
-		vals := v.GetArray("topics")
-		for i:= 0; i < len(vals); i++ {
-			vv := vals[i].GetObject("topics")
-			if vv != nil {
-				_ = vv.String()
-				count++
-			}
-		}
-	}
-}
-
 // jsoniter
-func BenchmarkJsoniterLarge(b *testing.B) {
+func BenchmarkJsoniterLargePl(b *testing.B) {
 	iter := jsoniter.ParseBytes(jsoniter.ConfigDefault, largeFixture)
 	b.ReportAllocs()
+	b.SetBytes(int64(len(largeFixture)))
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		iter.ResetBytes(largeFixture)
@@ -80,8 +66,10 @@ func BenchmarkJsoniterLarge(b *testing.B) {
 }
 
 // encode/json
-func BenchmarkEncodingJsonLarge(b *testing.B) {
+func BenchmarkEncodingJsonLargePl(b *testing.B) {
 	b.ReportAllocs()
+	b.ResetTimer()
+	b.SetBytes(int64(len(largeFixture)))
 	for i := 0; i < b.N; i++ {
 		payload := &LargePayload{}
 		json.Unmarshal(largeFixture, payload)
